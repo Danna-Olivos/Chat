@@ -1708,6 +1708,26 @@
         "build": {
           "build/netcoreapp3.1/xunit.runner.visualstudio.props": {}
         }
+      },
+      "ClientApp/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v7.0",
+        "compile": {
+          "bin/placeholder/ClientApp.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ClientApp.dll": {}
+        }
+      },
+      "ServerApp/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v7.0",
+        "compile": {
+          "bin/placeholder/ServerApp.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ServerApp.dll": {}
+        }
       }
     }
   },
@@ -5500,11 +5520,23 @@
         "xunit.runner.visualstudio.2.4.5.nupkg.sha512",
         "xunit.runner.visualstudio.nuspec"
       ]
+    },
+    "ClientApp/1.0.0": {
+      "type": "project",
+      "path": "../ClientApp/ClientApp.csproj",
+      "msbuildProject": "../ClientApp/ClientApp.csproj"
+    },
+    "ServerApp/1.0.0": {
+      "type": "project",
+      "path": "../ServerApp/ServerApp.csproj",
+      "msbuildProject": "../ServerApp/ServerApp.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net7.0": [
+      "ClientApp >= 1.0.0",
       "Microsoft.NET.Test.Sdk >= 17.7.1",
+      "ServerApp >= 1.0.0",
       "coverlet.collector >= 3.2.0",
       "xunit >= 2.4.2",
       "xunit.runner.visualstudio >= 2.4.5"
@@ -5534,7 +5566,14 @@
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/home/dannaabigailolivosnoriega/Chat/ClientApp/ClientApp.csproj": {
+              "projectPath": "/home/dannaabigailolivosnoriega/Chat/ClientApp/ClientApp.csproj"
+            },
+            "/home/dannaabigailolivosnoriega/Chat/ServerApp/ServerApp.csproj": {
+              "projectPath": "/home/dannaabigailolivosnoriega/Chat/ServerApp/ServerApp.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
