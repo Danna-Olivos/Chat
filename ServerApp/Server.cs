@@ -2,6 +2,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Server
 {
@@ -26,12 +27,34 @@ namespace Server
         }
 
         public void Start(){
-            byte [] buffer = new byte[1024];
-            String msg;
-            s_Client = s_Server.Accept();
-            s_Client.Receive(buffer);
-            msg = Encoding.ASCII.GetString(buffer);
-            Console.WriteLine("Se recibio el msg");
+            Thread h;
+            while(true){
+                Console.Write("Esperando conexiones...");
+                s_Client = s_Server.Accept();
+                h = new Thread(ConectClient);
+                h.Start(s_Client);
+                Console.WriteLine("Se ha conectado exitosamenre");
+            } 
         }
+
+        public void ConectClient(object s){
+            Socket s_Client = (Socket)s;//instancia que se conecta con el cliente 
+            byte [] buffer;
+            String msg;
+            int cadenaIndex;
+
+            while(true){
+                buffer = new byte[1024];
+                 s_Client.Receive(buffer);
+                 msg = Encoding.ASCII.GetString(buffer);
+                 cadenaIndex = msg.IndexOf('\0');
+                 if(cadenaIndex > 0){
+                    msg = msg.Substring(0,cadenaIndex);
+                 }
+                 Console.WriteLine("Se recibio el msg: " + msg);
+                 Console.Out.Flush();
+            } 
+        }
+        
     }
 }

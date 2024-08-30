@@ -10,8 +10,14 @@ namespace Client
     {
         public static void Main(string[]args){
             Client c = new Client("localhost",4404);
+            String msg;
             c.Start();
-            c.Send("Hole pinole");
+            
+            while(true){
+                Console.WriteLine("Escriba: ");
+                msg = Console.ReadLine();
+                c.Send(msg);
+            }
             Console.ReadKey();
         }
     }
