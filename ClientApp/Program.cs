@@ -12,13 +12,15 @@ namespace Client
             Client c = new Client("localhost",4404);
             String msg;
             c.Start();
-            
             while(true){
-                Console.WriteLine("Escriba: ");
+                Console.Write("Escriba: ");
                 msg = Console.ReadLine();
                 c.Send(msg);
+                if(msg.Equals("*")){
+                    c.Disconnect();
+                }
             }
-            Console.ReadKey();
+            //Console.ReadKey();
         }
     }
 }

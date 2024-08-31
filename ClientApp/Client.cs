@@ -32,5 +32,28 @@ namespace Client
             s_Client.Send(byteMsg);
             Console.WriteLine("Mensaje enviado");
         }
+
+        public void Disconnect(){
+
+             try
+            {
+                // Shutdown the socket to stop sending and receiving data
+                s_Client.Shutdown(SocketShutdown.Both);
+
+                // Close the socket
+                s_Client.Close();
+            
+                Console.WriteLine("Te haz desconectado.");
+            }
+            catch (SocketException se)
+            {
+                Console.WriteLine($"Socket error during disconnection: {se.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during disconnection: {ex.Message}");
+            }
+        }   
     }
+    
 }
