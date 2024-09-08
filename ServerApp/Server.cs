@@ -27,7 +27,7 @@ namespace Server
 
             s_Server = new Socket(address.AddressFamily,SocketType.Stream, ProtocolType.Tcp);
             s_Server.Bind(endPoint);
-            s_Server.Listen(int.MaxValue); //might fuck everything 
+            s_Server.Listen(int.MaxValue); 
 
             Console.WriteLine("El servidor se ha conectado");
         }
@@ -97,16 +97,6 @@ namespace Server
                 Console.WriteLine("Conexión cerrada con el cliente.");
             }  
         }
-
-        // static string ObtenerNombreUsuario(Socket clienteSocket)
-        // {
-        //     // Aquí recibirías el nombre de usuario real del cliente
-        //     byte[] buffer = new byte[1024];
-        //     int bytesRecibidos = clienteSocket.Receive(buffer);
-        //     string nombreUsuario = Encoding.UTF8.GetString(buffer, 0, bytesRecibidos);
-        //     return nombreUsuario.Trim();
-        // }
-
 
         public String byteToString(byte[]buffer){
             String msg;

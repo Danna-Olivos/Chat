@@ -17,8 +17,8 @@ namespace Client
 
         private Socket s_Client;
 
-        String userName; 
-        String status;
+        String? userName{get; set;}
+        String? status{get; set;}
         
         public Client(String ip, int port){
             host = Dns.GetHostEntry(ip);

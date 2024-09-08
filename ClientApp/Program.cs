@@ -10,7 +10,7 @@ namespace Client
     {
         public static void Main(string[]args){
             Client c = new Client("localhost",4404);
-            String msg;
+            String? msg;
             c.Start();
             while(true){
                 Console.Write("Escriba: ");
