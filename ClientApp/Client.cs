@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.Json;
+
 
 namespace Client
 {
@@ -14,6 +16,10 @@ namespace Client
         private IPEndPoint endPoint;
 
         private Socket s_Client;
+
+        String userName; 
+        String status;
+        
         public Client(String ip, int port){
             host = Dns.GetHostEntry(ip);
             address = host.AddressList[0];
@@ -28,19 +34,22 @@ namespace Client
         }
 
         public void Send(String msg){
-            byte[] byteMsg = Encoding.ASCII.GetBytes(msg);
+            byte[] byteMsg = Encoding.UTF8.GetBytes(msg);
             s_Client.Send(byteMsg);
             Console.WriteLine("Mensaje enviado");
+        }
+
+        public void Receive(){
+            byte[]buffer = new byte[1024];
+            s_Client.Receive(buffer);
+            //agregar nameuser y estado 
         }
 
         public void Disconnect(){
 
              try
             {
-                // Shutdown the socket to stop sending and receiving data
                 s_Client.Shutdown(SocketShutdown.Both);
-
-                // Close the socket
                 s_Client.Close();
             
                 Console.WriteLine("Te haz desconectado.");

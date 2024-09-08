@@ -16,8 +16,9 @@ namespace Client
                 Console.Write("Escriba: ");
                 msg = Console.ReadLine();
                 c.Send(msg);
-                if(msg.Equals("*")){
+                if(msg == "exit"){
                     c.Disconnect();
+                    break; 
                 }
             }
             //Console.ReadKey();
