@@ -29,19 +29,19 @@ namespace Client
             
         }
 
-        public void Start(){
-            s_Client.Connect(endPoint);
+        public async void Start(){
+            await s_Client.ConnectAsync(endPoint);
         }
 
-        public void Send(String msg){
+        public async void Send(String msg){
             byte[] byteMsg = Encoding.UTF8.GetBytes(msg);
-            s_Client.Send(byteMsg);
+            await s_Client.SendAsync(byteMsg);
             Console.WriteLine("Mensaje enviado");
         }
 
-        public void Receive(){
+        public async void Receive(){
             byte[]buffer = new byte[1024];
-            s_Client.Receive(buffer);
+            await s_Client.ReceiveAsync(buffer);
             //agregar nameuser y estado 
         }
 

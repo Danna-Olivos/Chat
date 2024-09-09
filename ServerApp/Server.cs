@@ -32,7 +32,7 @@ namespace Server
             Console.WriteLine("El servidor se ha conectado");
         }
 
-        public void Start(){
+        public async void Start(){
             Thread h;
             Console.WriteLine("Esperando conexiones...");
             
@@ -40,7 +40,7 @@ namespace Server
             {
                 try
                 {
-                    s_Client = s_Server.Accept();  // Acepta una conexión
+                    s_Client = await s_Server.AcceptAsync();  // Acepta una conexión
                     h = new Thread(ConectClient);
                     h.Start(s_Client);
                     //agregar al dictionario 
@@ -55,7 +55,7 @@ namespace Server
             }
         }
 
-        public void ConectClient(object client){
+        public async void ConectClient(object client){
             Socket s_Client = (Socket)client;//instancia que se conecta con el cliente 
             byte [] buffer;
             String msg;
@@ -63,7 +63,7 @@ namespace Server
             {//parte para leer los mensjaes del cliente al servidor
                 while(true){
                 buffer = new byte[1024];
-                int quantitieByte = s_Client.Receive(buffer);
+                int quantitieByte = await s_Client.ReceiveAsync(buffer);
                 if(quantitieByte == 0){
                     Console.WriteLine("El cliente no se pudo conectar");
                     break;

@@ -34,7 +34,7 @@ namespace CHAT
         }
     class Messages
     {
-        //switch para identificar el tipo de mensaje
+        //switch para identificar el tipo de mensaje y crear json 
         public Dictionary<string, object> IdentifyOP(messageType type, string username)
         {
             Dictionary<string, object> jsonType = new Dictionary<string, object>();
@@ -64,11 +64,20 @@ namespace CHAT
             return jsonType; 
         }
 
+        //serializar 
         public byte[] JSONToByte(Dictionary<string, object> jsonType)
         {
             var options = new JsonSerializerOptions {WriteIndented = true };
-            byte[] jsonBytes =JsonSerializer.SerializeToUtf8Bytes(jsonType,options);
+            byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(jsonType,options);
             return jsonBytes; 
+        }
+
+        //deserializar
+        public Dictionary<string, object> ByteToJSON(byte[] jsonBytes)
+        {
+            var readOnlySpan = new ReadOnlySpan<byte>(jsonBytes);
+            Dictionary<string, object> jsonType = JsonSerializer.Deserialize<Dictionary<string,object>>(readOnlySpan)!;
+            return jsonType; 
         }
         
         //metodos que se van a serializar a json
