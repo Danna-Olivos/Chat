@@ -65,7 +65,7 @@ namespace Server
                 buffer = new byte[1024];
                 int quantitieByte = await s_Client.ReceiveAsync(buffer);
                 if(quantitieByte == 0){
-                    Console.WriteLine("El cliente no se pudo conectar");
+                    Console.WriteLine("El cliente se ha desconectado");
                     break;
                 }
                 msg = byteToString(buffer);

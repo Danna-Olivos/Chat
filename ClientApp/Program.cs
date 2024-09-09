@@ -9,7 +9,20 @@ namespace Client
     class Programa
     {
         public static void Main(string[]args){
-            Client c = new Client("localhost",4404);
+            String? ip;
+            int port; 
+            Console.Write("Por favor ingrese una direccion IPv4: ");
+            ip = Console.ReadLine();
+
+            Console.Write("Ingrese un puerto: ");
+            string? portInput = Console.ReadLine();
+            while (!int.TryParse(portInput, out port))
+            {
+                Console.WriteLine("Por favor, ingrese un numero valido para el puerto.");
+                portInput = Console.ReadLine();
+            }
+
+            Client c = new Client(ip,port);
             String? msg;
             c.Start();
             while(true){
@@ -21,7 +34,6 @@ namespace Client
                     break; 
                 }
             }
-            //Console.ReadKey();
         }
     }
 }
