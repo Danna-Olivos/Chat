@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace CHAT
 {
 
-     enum messageType
+    public enum messageType
         {
             IDENTIFY,
             RESPONSE,
@@ -32,10 +32,10 @@ namespace CHAT
             DISCONNECT,
             DISCONNECTED,
         }
-    class Messages
+    public class Messages
     {
         //switch para identificar el tipo de mensaje y crear json 
-        public Dictionary<string, object> IdentifyOP(messageType type, string username)
+        public Dictionary<string, object> IdentifyUser(messageType type, string username)
         {
             Dictionary<string, object> jsonType = new Dictionary<string, object>();
 
@@ -49,7 +49,7 @@ namespace CHAT
                 case messageType.RESPONSE:
                     jsonType["type"] = "RESPONSE";
                     jsonType["operation"] = "IDENTIFY";
-                    jsonType["result"] = "USER_ALREADY_EXISTS";
+                    jsonType["result"] = "USER_ALREADY_EXISTS"; //hacer que este sea succes
                     jsonType["extra"] = username;
                     break;
 
@@ -61,6 +61,23 @@ namespace CHAT
                 default:
                     throw new ArgumentException("Invalid message type");
             }
+            return jsonType; 
+        }
+        
+        public Dictionary<string, object> InvalidOP(messageType type, string result)
+        {
+            Dictionary<string, object> jsonType = new Dictionary<string, object>();
+            jsonType["type"] = "RESPONSE";
+            jsonType["operation"]= "IDENTIFY";
+            jsonType["result"]= result; 
+            return jsonType; 
+        }
+
+         public Dictionary<string, object> DesconectUser(messageType type, string user)
+        {
+            Dictionary<string, object> jsonType = new Dictionary<string, object>();
+            jsonType["type"] = "DISCONNECTED";
+            jsonType["username"]= user;
             return jsonType; 
         }
 

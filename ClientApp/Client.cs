@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
+using CHAT;
 
 
 namespace Client
@@ -20,6 +21,7 @@ namespace Client
         String? userName{get; set;}
         String? status{get; set;}
         
+        private Messages mensajes = new Messages(); 
         public Client(String ip, int port){
             host = Dns.GetHostEntry(ip);
             address = host.AddressList[0];
@@ -33,9 +35,28 @@ namespace Client
             await s_Client.ConnectAsync(endPoint);
         }
 
+        public void NameUser()
+        {
+            Console.Write("Registre un nombre de usuario: ");
+            userName = Console.ReadLine();
+            IdentifyInServer(messageType.IDENTIFY, userName);
+        }
+
+        public void IdentifyInServer(messageType type, string userName)
+        {
+            Dictionary<string, object> jsonType = mensajes.IdentifyUser(type, userName);
+            byte [] json = mensajes.JSONToByte(jsonType); 
+            SendBytes(json); 
+        }
+
         public async void Send(String msg){
             byte[] byteMsg = Encoding.UTF8.GetBytes(msg);
             await s_Client.SendAsync(byteMsg);
+            Console.WriteLine("Mensaje enviado");
+        }
+
+        public async void SendBytes(byte[] msg){
+            await s_Client.SendAsync(msg);
             Console.WriteLine("Mensaje enviado");
         }
 

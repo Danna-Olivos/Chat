@@ -98,6 +98,8 @@ namespace Server
             }  
         }
 
+        
+
         public String byteToString(byte[]buffer){
             String msg;
             int cadenaIndex;
