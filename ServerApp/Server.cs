@@ -31,9 +31,7 @@ namespace Server
 
             Console.WriteLine("El servidor se ha conectado");
         }
-
-        public async void Start(){
-            Thread h;
+        public async Task Start(){
             Console.WriteLine("Esperando conexiones...");
             
             while (true)
@@ -41,11 +39,12 @@ namespace Server
                 try
                 {
                     s_Client = await s_Server.AcceptAsync();  // Acepta una conexión
-                    h = new Thread(ConectClient);
-                    h.Start(s_Client);
-                    //agregar al dictionario 
+                    Thread clientThread = new Thread(ConectClient);
+                    clientThread.Start(s_Client);
                     Console.WriteLine("Cliente conectado");
                     
+                    string clientId = s_Client.RemoteEndPoint.ToString(); // Identify the client by IP and port
+                    clientesConectados.TryAdd(clientId, s_Client);
                     //agregar cliente al cuarto
                 }
                 catch (Exception ex)
@@ -58,19 +57,22 @@ namespace Server
         public async void ConectClient(object client){
             Socket s_Client = (Socket)client;//instancia que se conecta con el cliente 
             byte [] buffer;
-            String msg;
+            string msg;
+            string clientId = s_Client.RemoteEndPoint.ToString();
             try 
             {//parte para leer los mensjaes del cliente al servidor
                 while(true){
-                buffer = new byte[1024];
-                int quantitieByte = await s_Client.ReceiveAsync(buffer);
-                if(quantitieByte == 0){
-                    Console.WriteLine("El cliente se ha desconectado");
-                    break;
-                }
-                msg = byteToString(buffer);
-                Console.WriteLine("Mensaje recibido: " + msg);
-                Console.Out.Flush();
+                    buffer = new byte[1024];
+                    int quantitieByte = await s_Client.ReceiveAsync(buffer);
+                    if(quantitieByte == 0){
+                        Console.WriteLine("El cliente se ha desconectado");
+                        break;
+                    }
+                    msg = byteToString(buffer);
+                    Console.WriteLine("Mensaje recibido: " + msg);
+                    Console.Out.Flush();
+
+                    await SendMessageToClient(s_Client, "Mensaje enviado");
                 } 
             }
             catch (SocketException se)
@@ -94,8 +96,20 @@ namespace Server
                     Console.WriteLine($"Error al cerrar el socket: {se.Message}");
                 }
                 s_Client.Close(); // Cierra el socket y libera recursos
+                clientesConectados.TryRemove(clientId, out _); 
                 Console.WriteLine("Conexión cerrada con el cliente.");
             }  
+        }
+
+        public async Task SendMessageToClient(Socket client, string message)
+        {
+            byte[] messageBytes = Encoding.UTF8.GetBytes(message);
+            await client.SendAsync(new ArraySegment<byte>(messageBytes), SocketFlags.None);
+        }
+
+        public async Task Receive(Socket client)
+        {
+            //implementar how to recieve the jsonssss
         }
 
         

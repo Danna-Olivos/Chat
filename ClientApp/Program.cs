@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Client
+namespace ClientApp
 {
     class Programa
     {
-        public static void Main(string[]args){
+        public static async Task Main(string[]args){
             String? ip;
             int port; 
             Console.Write("Por favor ingrese una direccion IPv4: ");
@@ -24,9 +24,9 @@ namespace Client
 
             Client c = new Client(ip,port);
             String? msg;
-            c.Start();
+            await c.Start();
             while(true){
-                Console.Write("Escriba: ");
+                Console.WriteLine("Escriba: ");
                 msg = Console.ReadLine();
                 c.Send(msg);
                 if(msg == "exit"){

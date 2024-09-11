@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace CHAT
+namespace ClientApp
 {
 
     public enum messageType
@@ -34,69 +34,41 @@ namespace CHAT
         }
     public class Messages
     {
-        //switch para identificar el tipo de mensaje y crear json 
-        public Dictionary<string, object> IdentifyUser(messageType type, string username)
+        //serializar
+        public string JSONToString<T>(T obj) where T : class
         {
-            Dictionary<string, object> jsonType = new Dictionary<string, object>();
-
-            switch (type)
-            {
-                case messageType.IDENTIFY:
-                    jsonType["type"] = "IDENTIFY";
-                    jsonType["username"] = username;
-                    break;
-
-                case messageType.RESPONSE:
-                    jsonType["type"] = "RESPONSE";
-                    jsonType["operation"] = "IDENTIFY";
-                    jsonType["result"] = "USER_ALREADY_EXISTS"; //hacer que este sea succes
-                    jsonType["extra"] = username;
-                    break;
-
-                case messageType.NEW_USER:
-                    jsonType["type"] = "NEW_USER";
-                    jsonType["username"] = username;
-                    break;
-
-                default:
-                    throw new ArgumentException("Invalid message type");
-            }
-            return jsonType; 
-        }
-        
-        public Dictionary<string, object> InvalidOP(messageType type, string result)
-        {
-            Dictionary<string, object> jsonType = new Dictionary<string, object>();
-            jsonType["type"] = "RESPONSE";
-            jsonType["operation"]= "IDENTIFY";
-            jsonType["result"]= result; 
-            return jsonType; 
-        }
-
-         public Dictionary<string, object> DesconectUser(messageType type, string user)
-        {
-            Dictionary<string, object> jsonType = new Dictionary<string, object>();
-            jsonType["type"] = "DISCONNECTED";
-            jsonType["username"]= user;
-            return jsonType; 
-        }
-
-        //serializar 
-        public byte[] JSONToByte(Dictionary<string, object> jsonType)
-        {
-            var options = new JsonSerializerOptions {WriteIndented = true };
-            byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(jsonType,options);
-            return jsonBytes; 
+            var options = new JsonSerializerOptions{WriteIndented = true};
+            string jsonString = JsonSerializer.Serialize(obj,options);
+            return jsonString; 
         }
 
         //deserializar
-        public Dictionary<string, object> ByteToJSON(byte[] jsonBytes)
+        public static T StringToJSON<T>(string json) where T :class
         {
-            var readOnlySpan = new ReadOnlySpan<byte>(jsonBytes);
-            Dictionary<string, object> jsonType = JsonSerializer.Deserialize<Dictionary<string,object>>(readOnlySpan)!;
-            return jsonType; 
+            return JsonSerializer.Deserialize<T>(json)!;
+        }
+        public partial class Identify
+        {
+            public messageType? type{get;set;}
+            public string? username{get;set;}
+            public messageType? operation{get;set;}
+            public string? result{get;set;}
+            public string? extra{get;set;}
+
+            public Identify(messageType type, messageType operation, string result, string extra)
+            {
+                this.type = type;
+                this.operation = operation;
+                this.result = result;
+                this.extra = extra; 
+            }
+            public Identify(messageType type, string username)
+            {
+                this.type = type;
+                this.username = username;
+                
+            }
         }
         
-        //metodos que se van a serializar a json
     }
 }

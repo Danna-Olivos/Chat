@@ -8,9 +8,9 @@ namespace Server
 {
     class Programa
     {
-        public static void Main(string[]args){
+        public static async Task Main(string[]args){
             Server s = new Server("localhost", 4404);
-            s.Start();
+            await s.Start();
             Console.ReadKey();
         }
     }
