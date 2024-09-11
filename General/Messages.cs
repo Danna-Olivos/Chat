@@ -21,6 +21,7 @@ namespace General
             NEW_ROOM,
             INVITE,
             INVITATION,
+            INVALID,
             JOIN_ROOM,
             JOINED_ROOM,
             ROOM_USERS,
@@ -67,6 +68,20 @@ namespace General
                 this.type = type;
                 this.username = username;
                 
+            }
+        }
+        
+        public partial class Invalid
+        {
+            public messageType? type{get;set;}
+            public messageType? operation{get;set;}
+            public string? result{get;set;}
+
+            public Invalid(messageType type, messageType operation, string result)
+            {
+                this.type = type;
+                this.operation = operation;
+                this.result = result;
             }
         }
 

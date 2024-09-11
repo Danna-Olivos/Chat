@@ -35,12 +35,12 @@ namespace ClientApp
         {
             try
             {
-                // Intentar conectarse al servidor
                 await s_Client.ConnectAsync(endPoint);
                 Console.WriteLine("Te conectaste al servidor");
 
-                _ = Task.Run(() => Receive());  
-                //NameUser();
+                _ = Task.Run(() => Receive());
+                //_ = Task.Run(()=>Send());  
+                NameUser();
             }
             catch (Exception ex)
             {
@@ -53,27 +53,20 @@ namespace ClientApp
             Console.Write("Registre un nombre de usuario(8 caracteres): ");
             userName = Console.ReadLine();
             IdentifyInServer();
-            Task.Delay(2000).Wait(); // mnot sure
+            //Task.Delay(2000).Wait(); // mnot sure
         }
 
         public async void IdentifyInServer()
         {
-            Messages.Identify identificador = new Messages.Identify(messageType.IDENTIFY,userName);
+            Messages.Identify identificador = new Messages.Identify(messageType.IDENTIFY,userName!);
             string json = mensajes.JSONToString(identificador);
             await Send(json);
         }
-
-        public async Task Send(String msg){
+        public async Task Send(string msg){
             byte[] byteMsg = Encoding.UTF8.GetBytes(msg);
             await s_Client.SendAsync(byteMsg);
             Console.WriteLine("Mensaje enviado" + msg);
         }
-
-        // public async Task SendBytes(byte[] msg){
-        //     await s_Client.SendAsync(msg);
-        //     Console.WriteLine("Mensaje enviado");
-        // }
-
         public async Task Receive(){
             
             byte[] buffer = new byte[1024];
