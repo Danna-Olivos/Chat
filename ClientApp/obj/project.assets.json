@@ -1,11 +1,30 @@
 {
   "version": 3,
   "targets": {
-    "net7.0": {}
+    "net7.0": {
+      "General/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v7.0",
+        "compile": {
+          "bin/placeholder/General.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/General.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "General/1.0.0": {
+      "type": "project",
+      "path": "../General/General.csproj",
+      "msbuildProject": "../General/General.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net7.0": []
+    "net7.0": [
+      "General >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "/home/dannaabigailolivosnoriega/.nuget/packages/": {}
@@ -31,7 +50,11 @@
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/home/dannaabigailolivosnoriega/Chat/General/General.csproj": {
+              "projectPath": "/home/dannaabigailolivosnoriega/Chat/General/General.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

@@ -5,10 +5,11 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text.Json;
 using System.Collections.Concurrent;
+using General;
 
 
 
-namespace Server
+namespace ServerApp
 {
     class Server
     {

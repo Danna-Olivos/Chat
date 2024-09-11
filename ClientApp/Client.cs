@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
-
+using General;
 
 namespace ClientApp
 {

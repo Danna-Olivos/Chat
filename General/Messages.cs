@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace ClientApp
+namespace General
 {
 
     public enum messageType
@@ -69,6 +69,8 @@ namespace ClientApp
                 
             }
         }
+
+        //las demas 
         
     }
 }

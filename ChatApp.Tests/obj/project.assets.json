@@ -1712,6 +1712,9 @@
       "ClientApp/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v7.0",
+        "dependencies": {
+          "General": "1.0.0"
+        },
         "compile": {
           "bin/placeholder/ClientApp.dll": {}
         },
@@ -1719,9 +1722,22 @@
           "bin/placeholder/ClientApp.dll": {}
         }
       },
+      "General/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v7.0",
+        "compile": {
+          "bin/placeholder/General.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/General.dll": {}
+        }
+      },
       "ServerApp/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v7.0",
+        "dependencies": {
+          "General": "1.0.0"
+        },
         "compile": {
           "bin/placeholder/ServerApp.dll": {}
         },
@@ -5525,6 +5541,11 @@
       "type": "project",
       "path": "../ClientApp/ClientApp.csproj",
       "msbuildProject": "../ClientApp/ClientApp.csproj"
+    },
+    "General/1.0.0": {
+      "type": "project",
+      "path": "../General/General.csproj",
+      "msbuildProject": "../General/General.csproj"
     },
     "ServerApp/1.0.0": {
       "type": "project",
