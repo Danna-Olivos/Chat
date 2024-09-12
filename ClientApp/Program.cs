@@ -22,13 +22,13 @@ namespace ClientApp
                 portInput = Console.ReadLine();
             }
 
-            Client c = new Client(ip,port);
+            Client c = new Client(ip!,port);
             String? msg;
             await c.Start();
             while(true){
                 Console.WriteLine("Escriba: ");
                 msg = Console.ReadLine();
-                c.Send(msg);
+                _ = c.Send(msg!);
                 if(msg == "exit"){
                     c.Disconnect();
                     break; 

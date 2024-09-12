@@ -33,13 +33,12 @@ namespace ServerApp
         }
         public async Task Start(){
             Console.WriteLine("Esperando conexiones...");
-            
             while (true)
             {
                 try
                 {
-                    Socket s_Client = await s_Server.AcceptAsync();  // Acepta una conexión
-                    Task.Run(() => HandleClient(s_Client));  
+                    Socket s_Client = await s_Server.AcceptAsync();  
+                    _ = Task.Run(() => HandleClient(s_Client)); 
                 }
                 catch (Exception ex)
                 {
@@ -52,48 +51,103 @@ namespace ServerApp
         {
             string? username = null;
             bool isIdentified = false;
-            byte[] buffer = new byte[1024];
+    
             while (true)
             {
-                int receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+                byte[] buffer = new byte[1024];
 
+                int receivedBytes = await ReceiveDataAsync(client, buffer);
                 if (receivedBytes == 0)
                 {
-                    Console.WriteLine("Cliente desconectado.");
+                    Console.WriteLine("Cliente desconectado");
                     break;
                 }
+
                 string jsonMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                Messages.Identify? identifyMessage = Messages.StringToJSON<Messages.Identify>(jsonMessage);
+                var identifyMessage = ParseIdentifyMessage(jsonMessage);
 
-                if (!isIdentified && identifyMessage != null && identifyMessage.type == messageType.IDENTIFY)
+                if (!isIdentified && identifyMessage != null)
                 {
-                    username = identifyMessage.username;
-                    if (!clientesConectados.ContainsKey(username!))
-                    {
-                        isIdentified = true;  
-                        clientesConectados.TryAdd(username!, client); 
-                        Console.WriteLine(username + " se conecto"); 
-
-                        Messages.Identify response = new Messages.Identify(messageType.RESPONSE, messageType.IDENTIFY, "SUCCESS", username!);
-                        await SendMessageToClient(client, response);
-                        BroadcastNewUser(username!);
-                    }
-                    else
-                    {
-                        Messages.Identify response = new Messages.Identify(messageType.RESPONSE, messageType.IDENTIFY, "USER_ALREADY_EXISTS", username!);
-                        await SendMessageToClient(client,response);
-                    }
-                } 
-                else if(isIdentified)
+                    isIdentified = await HandleClientIdentification(client, identifyMessage);
+                    username = identifyMessage?.username;
+                }
+                else if (isIdentified)
                 {
-                    Console.WriteLine($"[{username}]: {jsonMessage}");
+                    HandleClientMessage(jsonMessage, username);
                 }
                 else
                 {
-                    Messages.Invalid response = new Messages.Invalid(messageType.RESPONSE, messageType.INVALID, "NOT_IDENTIFIED");
-                    await SendMessageToClient(client,response);
+                    await SendInvalidResponse(client);
                 }
             }
+        }
+
+        private async Task<int> ReceiveDataAsync(Socket client, byte[] buffer)
+        {
+            try
+            {
+                return await client.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error receiving data: {ex.Message}");
+                return 0; 
+            }
+        }
+
+        private Messages.Identify? ParseIdentifyMessage(string jsonMessage)
+        {
+            try
+            {
+                return Messages.StringToJSON<Messages.Identify>(jsonMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing message: {ex.Message}");
+                return null; 
+            }
+        }
+
+        private async Task<bool> HandleClientIdentification(Socket client, Messages.Identify identifyMessage)
+        {
+            if (identifyMessage.type == messageType.IDENTIFY)
+            {
+                string username = identifyMessage.username!;
+                if (!clientesConectados.ContainsKey(username!) && username.Length<=8)
+                {
+                    clientesConectados.TryAdd(username!, client);
+                    Console.WriteLine($"{username} connected");
+
+                    Messages.Identify response = new Messages.Identify(messageType.RESPONSE, messageType.IDENTIFY, "SUCCESS", username!);
+                    await SendMessageToClient(client, response);
+                    BroadcastNewUser(username!);
+                    return true;
+                }else if(username.Length >= 8){
+                    await SendInvalidResponse(client);
+                    return false;
+                }
+                else
+                {
+                    Messages.Identify response = new Messages.Identify(messageType.RESPONSE, messageType.IDENTIFY, "USER_ALREADY_EXISTS", username!);
+                    await SendMessageToClient(client, response);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        private void HandleClientMessage(string jsonMessage, string? username)
+        {
+            if (!string.IsNullOrEmpty(username))
+            {
+                Console.WriteLine($"[{username}]: {jsonMessage}");
+            }
+        }
+
+        private async Task SendInvalidResponse(Socket client)
+        {
+            Messages.Invalid response = new Messages.Invalid(messageType.RESPONSE, messageType.INVALID, "NOT_IDENTIFIED");
+            await SendMessageToClient(client, response);
         }
 
         public async Task SendMessageToClient<T>(Socket client, T message)where T : class
@@ -103,14 +157,22 @@ namespace ServerApp
             await client.SendAsync(new ArraySegment<byte>(messageBytes), SocketFlags.None);
         }
 
-        private void BroadcastNewUser(string username)
+        private async void BroadcastNewUser(string username)
         {
             foreach (var client in clientesConectados)
             {
-                if (client.Key != username)
+                try
                 {
-                    Messages.Identify newUserMessage = new Messages.Identify(messageType.NEW_USER, username);
-                    SendMessageToClient(client.Value, newUserMessage).Wait();
+                    if (client.Key != username)
+                    {
+                        Messages.Identify newUserMessage = new Messages.Identify(messageType.NEW_USER, username);
+                        await SendMessageToClient(client.Value, newUserMessage);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Error broadcasting to client:{ex.Message}");
+                    clientesConectados.TryRemove(client.Key, out _);
                 }
             }
         }

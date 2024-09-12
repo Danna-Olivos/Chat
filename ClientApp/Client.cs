@@ -38,34 +38,40 @@ namespace ClientApp
                 await s_Client.ConnectAsync(endPoint);
                 Console.WriteLine("Te conectaste al servidor");
 
-                _ = Task.Run(() => Receive());
-                //_ = Task.Run(()=>Send());  
-                NameUser();
+                _ = Task.Run(() => Receive()); 
+                await NameUser();
             }
             catch (Exception ex)
             {
-            Console.WriteLine($"Error de conexión: {ex.Message}");
+                Console.WriteLine($"Error de conexión: {ex.Message}");
             }
         }
 
-        public void NameUser()
+        public async Task NameUser()
         {
             Console.Write("Registre un nombre de usuario(8 caracteres): ");
             userName = Console.ReadLine();
-            IdentifyInServer();
-            //Task.Delay(2000).Wait(); // mnot sure
+            await IdentifyInServer();
         }
 
-        public async void IdentifyInServer()
+        public async Task IdentifyInServer()
         {
             Messages.Identify identificador = new Messages.Identify(messageType.IDENTIFY,userName!);
             string json = mensajes.JSONToString(identificador);
             await Send(json);
         }
         public async Task Send(string msg){
-            byte[] byteMsg = Encoding.UTF8.GetBytes(msg);
-            await s_Client.SendAsync(byteMsg);
-            Console.WriteLine("Mensaje enviado" + msg);
+            try
+            {
+                byte[] byteMsg = Encoding.UTF8.GetBytes(msg);
+                await s_Client.SendAsync(byteMsg);
+                Console.WriteLine("Mensaje enviado: " + msg);
+            }
+            catch(SocketException ex)
+            {
+                Console.WriteLine($"Error sending message: {ex.Message}");
+            }
+            
         }
         public async Task Receive(){
             
@@ -78,6 +84,7 @@ namespace ClientApp
                     if (receivedBytes > 0)
                     {
                         string jsonMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+                        Console.WriteLine($"Received message from server: {jsonMessage}"); 
                         HandleMessage(jsonMessage);
                         
                     }

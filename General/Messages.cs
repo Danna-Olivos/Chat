@@ -35,6 +35,7 @@ namespace General
         }
     public class Messages
     {
+        public Messages(){}
         //serializar
         public string JSONToString<T>(T obj) where T : class
         {
@@ -55,6 +56,8 @@ namespace General
             public messageType? operation{get;set;}
             public string? result{get;set;}
             public string? extra{get;set;}
+
+            public Identify(){}
 
             public Identify(messageType type, messageType operation, string result, string extra)
             {
