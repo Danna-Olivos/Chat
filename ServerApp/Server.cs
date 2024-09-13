@@ -6,6 +6,7 @@ using System.Threading;
 using System.Text.Json;
 using System.Collections.Concurrent;
 using General;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ServerApp
 {
@@ -92,7 +93,7 @@ namespace ServerApp
                             
                             break;
                         case messageType.PUBLIC_TEXT:
-                            
+                            await HandlePublicText(jsonMessage,client);
                             break;
                         case messageType.NEW_ROOM:
                             
@@ -124,11 +125,42 @@ namespace ServerApp
                 }
         }
 
+        private async Task HandlePublicText(string jsonMessage, Socket client)
+        {
+            Messages.Text? toRecognize = Messages.StringToJSON<Messages.Text>(jsonMessage);
+            string username = GetUsernameBySocket(client)!;
+            Messages.Text response = new Messages.Text(messageType.PUBLIC_TEXT_FROM, username,toRecognize.text!);
+            await SendMessageToClient(client,response);
+            await BroadcastMessageToChat(username, toRecognize.text!);
+        }
+
         private async Task HandleStatusRequest(string jsonMessage, Socket client)
         {
             Messages.Status? toRecognize = Messages.StringToJSON<Messages.Status>(jsonMessage);
             string status = toRecognize.status!;
-            
+            string username = GetUsernameBySocket(client)!;
+            if(status == "ACTIVE"){
+
+                Messages.Status response = new Messages.Status(messageType.NEW_STATUS, username,status);
+                await SendMessageToClient(client, response);
+                await BroadcastMessage(username!,messageType.STATUS);//falta implementar 
+
+            }else if(status == "AWAY"){
+
+                Messages.Status response = new Messages.Status(messageType.NEW_STATUS, username,status);
+                await SendMessageToClient(client, response);
+                await BroadcastMessage(username!,messageType.STATUS);//fatla implementar 
+
+            }else if(status == "BUSY"){
+                
+                Messages.Status response = new Messages.Status(messageType.NEW_STATUS, username,status);
+                await SendMessageToClient(client, response);
+                await BroadcastMessage(username!,messageType.STATUS);//falta implementar
+
+            }else{
+                Messages.Invalid response = new Messages.Invalid(messageType.RESPONSE, messageType.INVALID, "INVALID");
+                await SendMessageToClient(client, response);
+            }
             
             
         }
@@ -149,7 +181,8 @@ namespace ServerApp
             }
             else
             {
-                await SendInvalidResponse(client);
+                Messages.Invalid response = new Messages.Invalid(messageType.RESPONSE, messageType.INVALID, "NOT_IDENTIFIED");
+                await SendMessageToClient(client, response);
             }
         }
 
@@ -178,11 +211,12 @@ namespace ServerApp
 
                     Messages.Identify response = new Messages.Identify(messageType.RESPONSE, messageType.IDENTIFY, "SUCCESS", username!);
                     await SendMessageToClient(client, response);
-                    await BroadcastNewUser(username!);
+                    await BroadcastMessage(username!,messageType.IDENTIFY);
 
                     return true;
                 }else if(username.Length >= 8){
-                    await SendInvalidResponse(client);
+                    Messages.Invalid response = new Messages.Invalid(messageType.RESPONSE, messageType.INVALID, "NOT_IDENTIFIED");
+                    await SendMessageToClient(client, response);
                     return false;
                 }
                 else
@@ -202,7 +236,7 @@ namespace ServerApp
             {
                 try
                 {
-                    await BroadcastUserLeft(username);
+                    await BroadcastMessage(username, messageType.DISCONNECT);
 
                     clientesConectados.TryRemove(username!,out client!);
                     client.Shutdown(SocketShutdown.Both);
@@ -230,12 +264,6 @@ namespace ServerApp
             }
         }
 
-        private async Task SendInvalidResponse(Socket client)
-        {
-            Messages.Invalid response = new Messages.Invalid(messageType.RESPONSE, messageType.INVALID, "NOT_IDENTIFIED");
-            await SendMessageToClient(client, response);
-        }
-
         public async Task SendMessageToClient<T>(Socket client, T message)where T : class
         {
             string jsonMessage = mensajes.JSONToString(message);
@@ -243,7 +271,40 @@ namespace ServerApp
             await client.SendAsync(new ArraySegment<byte>(messageBytes), SocketFlags.None);
         }
 
-        private async Task BroadcastNewUser(string username)
+        private async Task BroadcastMessage(string username, messageType operation)
+        {
+            foreach (var client in clientesConectados)
+            {
+                try
+                {
+                    if (client.Key != username)
+                    {
+                        switch(operation)
+                        {
+                            case messageType.DISCONNECT:
+                                Messages.Disconnect response = new Messages.Disconnect(messageType.DISCONNECTED, username);
+                                await SendMessageToClient(client.Value, response);
+                                break;
+                            case messageType.IDENTIFY:
+                                Messages.Identify newUserMessage = new Messages.Identify(messageType.NEW_USER, username);
+                                await SendMessageToClient(client.Value, newUserMessage);
+                                break;
+                            default:
+                                Console.WriteLine("Unhandled message type.");
+                                break;
+                        }
+                        
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Error broadcasting to client:{ex.Message}");
+                    clientesConectados.TryRemove(client.Key, out _);
+                }
+            }
+        }
+
+         private async Task BroadcastMessageToChat(string username,string text)
         {
             foreach (var client in clientesConectados)//para que se envie el mensaje a cada cliente conectado
             {
@@ -251,7 +312,7 @@ namespace ServerApp
                 {
                     if (client.Key != username)
                     {
-                        Messages.Identify newUserMessage = new Messages.Identify(messageType.NEW_USER, username);
+                        Messages.Text newUserMessage = new Messages.Text(messageType.PUBLIC_TEXT_FROM, username,text);
                         await SendMessageToClient(client.Value, newUserMessage);
                     }
                 }
@@ -263,26 +324,17 @@ namespace ServerApp
             }
         }
 
-        private async Task BroadcastUserLeft(string username)
+        private string? GetUsernameBySocket(Socket client)
         {
-            foreach (var client in clientesConectados)
+            foreach (var entry in clientesConectados)
             {
-                try
+                if (entry.Value == client) 
                 {
-                    if (client.Key != username)
-                    {
-                        Messages.Disconnect response = new Messages.Disconnect(messageType.DISCONNECTED, username);
-                        await SendMessageToClient(client.Value, response);
-                    }
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine($"Error broadcasting to client:{ex.Message}");
-                    clientesConectados.TryRemove(client.Key, out _);
+                    return entry.Key;
                 }
             }
+            return null;
         }
-        
 
     }
 }

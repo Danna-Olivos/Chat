@@ -129,12 +129,14 @@ namespace ClientApp
                         HandleNewUserMessage(jsonMessage);
                         break;
                     case messageType.NEW_STATUS:
+                        HandleNewStatusMessage(jsonMessage);
                         break;
                     case messageType.USER_LIST:
                         break;
                     case messageType.TEXT_FROM:
                         break;
                     case messageType.PUBLIC_TEXT_FROM:
+                        HandlePublicText(jsonMessage);
                         break;
                     case messageType.JOIN_ROOM:
                         break;
@@ -158,6 +160,26 @@ namespace ClientApp
             }
         }
 
+        private void HandlePublicText(string jsonMessage)
+        {
+            Messages.Text? response = Messages.StringToJSON<Messages.Text>(jsonMessage);
+            string text = response.text!;
+            if (status != null && response.type == messageType.PUBLIC_TEXT_FROM)
+            {
+                Console.WriteLine($"{response.username} : {text}");
+            }
+        }
+
+        private void HandleNewStatusMessage(string jsonMessage)
+        {
+            Messages.Status? response = Messages.StringToJSON<Messages.Status>(jsonMessage);
+            status = response.status;
+            if (status != null && response.type == messageType.NEW_STATUS)
+            {
+                Console.WriteLine($"{response.username} ha cambiado su estado a {response.status}");
+            }
+        }
+
         private void HandleDisconnectedMessage(string jsonMessage)
         {
             Messages.Disconnect? response = Messages.StringToJSON<Messages.Disconnect>(jsonMessage);
@@ -175,7 +197,7 @@ namespace ClientApp
             {
                 if (response.result == "SUCCESS")
                 {
-                    Console.WriteLine($"Identificación exitosa. Bienvenido {response.extra}.Presione enter para comenzar");
+                    Console.WriteLine($"Identificación exitosa. Bienvenido {response.extra}. Presione enter para comenzar");
                     isIdentified = true;
                 }
                 else if (response.result == "USER_ALREADY_EXISTS")
@@ -216,6 +238,12 @@ namespace ClientApp
             await Send(json);
         }
 
+        public async Task PublicText(string msg){
+            Messages.Text mensajeP = new Messages.Text(messageType.PUBLIC_TEXT, msg);
+            string json = mensajes.JSONToString(mensajeP);
+            await Send(json);
+        }
+
         public async void RecognizeCommand(string msg){
             var (command, input)= ParseCommand(msg);
             switch(command) 
@@ -225,7 +253,7 @@ namespace ClientApp
                     break;
                 case "*leaveRoom*":
                     break;
-                case "*sendToRoom*":
+                case "*sendMessageToRoom*":
                    
                     break;
                 case "*listOfRoomUsers*":
@@ -241,7 +269,7 @@ namespace ClientApp
                    
                     break;
                 case "*sendMessage*":
-                    
+                    await PublicText(input);
                     break;
                 case "*sendPrivateMessage*":
                     

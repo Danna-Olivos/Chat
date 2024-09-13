@@ -136,6 +136,42 @@ namespace General
 
         }
 
+        public partial class Text
+        {
+
+            public messageType? type{get;set;}
+            public string? username{get;set;}
+            public messageType? operation{get;set;}
+            public string? result{get;set;}
+            public string? extra{get;set;}
+            public string? text{get;set;}
+
+            public Text(){}
+
+            public Text(messageType type, string username, string text)
+            {
+                this.type = type;
+                this.username = username;
+                this.text = text;
+
+            }
+            public Text(messageType type, messageType operation, string result, string username)
+            {
+                this.type = type;
+                this.operation = operation;
+                this.result = result;
+                this.extra = username;
+
+            }
+
+            public Text(messageType type, string text)
+            {
+                this.type = type;
+                this.text = text;
+            }
+
+        }
+
         //las demas 
         
     }
