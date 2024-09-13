@@ -47,10 +47,7 @@ namespace ServerApp
         }
 
         public async Task HandleClient(Socket client)
-        {
-            string? username = null;
-            bool isIdentified = false;
-    
+        {    
             while (true)
             {
                 byte[] buffer = new byte[1024];
@@ -63,21 +60,57 @@ namespace ServerApp
                 }
 
                 string jsonMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                var identifyMessage = ParseIdentifyMessage(jsonMessage);
+                HandleRequest(jsonMessage,client);
+                
+            }
+        }
 
-                if (!isIdentified && identifyMessage != null)
+        public async void HandleRequest(string jsonMessage, Socket client)
+        {
+            try
                 {
-                    isIdentified = await HandleClientIdentification(client, identifyMessage);
-                    username = identifyMessage?.username;
+                    var toRecognize = JsonSerializer.Deserialize<Messages.Identify>(jsonMessage);
+
+                    if(toRecognize?.type == null)
+                    {
+                        Console.WriteLine("Unknown or invalid message received.");
+                        return;    
+                    }
+
+                    switch(toRecognize.type)
+                    {
+                        case messageType.IDENTIFY:
+                            await HandleIdentifyRequest(jsonMessage,client);
+                            break;
+                        
+                        default:
+                            Console.WriteLine("Unhandled message type.");
+                            break;
+                    }
                 }
-                else if (isIdentified)
+                catch(Exception ex)
                 {
-                    HandleClientMessage(jsonMessage, username);
+                    Console.WriteLine($"Error parsing message: {ex.Message}");
                 }
-                else
-                {
-                    await SendInvalidResponse(client);
-                }
+        }
+
+        private async Task HandleIdentifyRequest(string jsonMessage,Socket client)
+        {
+            bool isIdentified = false;
+            string? username = null;
+            Messages.Identify? toRecognize = Messages.StringToJSON<Messages.Identify>(jsonMessage);
+            if (!isIdentified && toRecognize != null)
+            {
+                isIdentified = await HandleClientIdentification(client, toRecognize);
+                username = toRecognize?.username;
+            }
+            else if (isIdentified)
+            {
+                HandleClientMessage(jsonMessage, username);
+            }
+            else
+            {
+                await SendInvalidResponse(client);
             }
         }
 

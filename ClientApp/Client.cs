@@ -65,7 +65,7 @@ namespace ClientApp
             {
                 byte[] byteMsg = Encoding.UTF8.GetBytes(msg);
                 await s_Client.SendAsync(byteMsg);
-                Console.WriteLine("Mensaje enviado: " + msg);
+                //Console.WriteLine("Mensaje enviado: " + msg);
             }
             catch(SocketException ex)
             {
@@ -109,11 +109,29 @@ namespace ClientApp
 
                 switch(toRecognize.type)
                 {
-                    case messageType.IDENTIFY:
-                        HandleIdentifyMessage(jsonMessage);
+                    case messageType.RESPONSE:
+                        HandleResponseMessage(jsonMessage);
                         break;
                     case messageType.NEW_USER:
                         HandleNewUserMessage(jsonMessage);
+                        break;
+                    case messageType.NEW_STATUS:
+                        break;
+                    case messageType.USER_LIST:
+                        break;
+                    case messageType.TEXT_FROM:
+                        break;
+                    case messageType.PUBLIC_TEXT_FROM:
+                        break;
+                    case messageType.JOIN_ROOM:
+                        break;
+                    case messageType.ROOM_USERS_LIST:
+                        break;
+                    case messageType.ROOM_TEXT_FROM:
+                        break;
+                    case messageType.LEFT_ROOM:
+                        break;
+                    case messageType.DISCONNECTED:
                         break;
                     default:
                         Console.WriteLine("Unhandled message type.");
@@ -126,11 +144,11 @@ namespace ClientApp
             }
         }
 
-        private void HandleIdentifyMessage(string jsonMessage)
+        private void HandleResponseMessage(string jsonMessage)
         {
             Messages.Identify? response = Messages.StringToJSON<Messages.Identify>(jsonMessage);
 
-            if (response.type == messageType.RESPONSE && response.operation == messageType.IDENTIFY)
+            if (response != null && response.type == messageType.RESPONSE && response.operation == messageType.IDENTIFY)
             {
                 if (response.result == "SUCCESS")
                 {
@@ -166,13 +184,43 @@ namespace ClientApp
         } 
 
         public async void RecognizeCommand(string msg){
-            switch(msg)
+            switch(msg) //agregar el identify?
             {
                 case "*exit":
                     await Disconnect();
                     break;
+                case "*leaveRoom":
+                    break;
+                case "*sendToRoom":
+                   
+                    break;
+                case "*listOfRoomUsers":
+                    
+                    break;
+                case "*joinRoom":
+                    
+                    break;
+                case "*inviteToRoom":
+                    
+                    break;
+                case "*makeRoom":
+                   
+                    break;
+                case "*sendMessage":
+                    
+                    break;
+                case "*sendPrivateMessage":
+                    
+                    break;
+                case "*users":
+                    
+                    break;
+                case "*status":
+                    
+                    break;
 
                 default:
+                //haz ingresado mal el comando, imprimirle en pantalla la lista de comandos 
                     break;
             }
         }

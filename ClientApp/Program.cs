@@ -26,13 +26,8 @@ namespace ClientApp
             String? msg;
             await c.Start();
             while(true){
-                Console.WriteLine("Escriba: ");
+                Console.WriteLine("Escriba: ");//hacer que aca apareza el nombre de usuario
                 msg = Console.ReadLine();
-                // _ = c.Send(msg!);
-                // if(msg == "exit"){
-                //     c.Disconnect();
-                //     break; 
-                // }
                 c.RecognizeCommand(msg!);
             }
         }
