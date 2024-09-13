@@ -82,6 +82,36 @@ namespace ServerApp
                         case messageType.IDENTIFY:
                             await HandleIdentifyRequest(jsonMessage,client);
                             break;
+                        case messageType.STATUS:
+                            
+                            break;
+                        case messageType.USERS:
+                            
+                            break;
+                        case messageType.TEXT:
+                            
+                            break;
+                        case messageType.PUBLIC_TEXT:
+                            
+                            break;
+                        case messageType.NEW_ROOM:
+                            
+                            break;
+                        case messageType.INVITE:
+                            
+                            break;
+                        case messageType.JOIN_ROOM:
+                            
+                            break;
+                        case messageType.ROOM_USERS:
+                            
+                            break;
+                        case messageType.LEAVE_ROOM:
+                            
+                            break;
+                        case messageType.DISCONNECT:
+                            await HandelDisconnectRequest(jsonMessage,client);
+                            break;
                         
                         default:
                             Console.WriteLine("Unhandled message type.");
@@ -127,19 +157,6 @@ namespace ServerApp
             }
         }
 
-        private Messages.Identify? ParseIdentifyMessage(string jsonMessage)
-        {
-            try
-            {
-                return Messages.StringToJSON<Messages.Identify>(jsonMessage);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error parsing message: {ex.Message}");
-                return null; 
-            }
-        }
-
         private async Task<bool> HandleClientIdentification(Socket client, Messages.Identify identifyMessage)
         {
             if (identifyMessage.type == messageType.IDENTIFY)
@@ -152,7 +169,7 @@ namespace ServerApp
 
                     Messages.Identify response = new Messages.Identify(messageType.RESPONSE, messageType.IDENTIFY, "SUCCESS", username!);
                     await SendMessageToClient(client, response);
-                    BroadcastNewUser(username!);
+                    await BroadcastNewUser(username!);
                     return true;
                 }else if(username.Length >= 8){
                     await SendInvalidResponse(client);
@@ -168,23 +185,31 @@ namespace ServerApp
             return false;
         }
 
-         public async Task Disconnect(Socket client){
-            try
+        public async Task HandelDisconnectRequest(string jsonMessage,Socket client){
+            Messages.Disconnect? toRecognize = Messages.StringToJSON<Messages.Disconnect>(jsonMessage);
+            string username = toRecognize.username!;
+            if(toRecognize.type == messageType.DISCONNECT)
             {
-                client.Shutdown(SocketShutdown.Both);
-                client.Close();
-                // Messages.Disconnect response = new Messages.Disconnect(messageType.DISCONNECTED, username!);
-                // await SendMessageToClient(client, response);
-                // clientesConectados.TryRemove(client.Key, out _);
+                try
+                {
+                    await BroadcastUserLeft(username);
+
+                    clientesConectados.TryRemove(username!,out client!);
+                    client.Shutdown(SocketShutdown.Both);
+                    client.Close();
+                    
+                    
+                }
+                catch (SocketException se)
+                {
+                    Console.WriteLine($"Socket error during disconnection: {se.Message}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error during disconnection: {ex.Message}");
+                }
             }
-            catch (SocketException se)
-            {
-                Console.WriteLine($"Socket error during disconnection: {se.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during disconnection: {ex.Message}");
-            }
+            
         } 
 
         private void HandleClientMessage(string jsonMessage, string? username)
@@ -208,7 +233,7 @@ namespace ServerApp
             await client.SendAsync(new ArraySegment<byte>(messageBytes), SocketFlags.None);
         }
 
-        private async void BroadcastNewUser(string username)
+        private async Task BroadcastNewUser(string username)
         {
             foreach (var client in clientesConectados)//para que se envie el mensaje a cada cliente conectado
             {
@@ -227,6 +252,27 @@ namespace ServerApp
                 }
             }
         }
+
+         private async Task BroadcastUserLeft(string username)
+        {
+            foreach (var client in clientesConectados)
+            {
+                try
+                {
+                    if (client.Key != username)
+                    {
+                        Messages.Disconnect response = new Messages.Disconnect(messageType.DISCONNECTED, username);
+                        await SendMessageToClient(client.Value, response);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Error broadcasting to client:{ex.Message}");
+                    clientesConectados.TryRemove(client.Key, out _);
+                }
+            }
+        }
+
 
     }
 }

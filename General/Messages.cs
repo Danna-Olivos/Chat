@@ -81,6 +81,8 @@ namespace General
             public string? username{get;set;}
             public string? roomname{get;set;}
 
+            public Disconnect(){}
+
             public Disconnect(messageType type, string roomname, string username){
                 this.type = type;
                 this.roomname = roomname;

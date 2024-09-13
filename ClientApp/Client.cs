@@ -54,7 +54,7 @@ namespace ClientApp
             await IdentifyInServer();
         }
 
-        public async Task IdentifyInServer()//switch para enviar?
+        public async Task IdentifyInServer()
         {
             Messages.Identify identificador = new Messages.Identify(messageType.IDENTIFY,userName!);
             string json = mensajes.JSONToString(identificador);
@@ -132,6 +132,7 @@ namespace ClientApp
                     case messageType.LEFT_ROOM:
                         break;
                     case messageType.DISCONNECTED:
+                        HandleDisconnectedMessage(jsonMessage);
                         break;
                     default:
                         Console.WriteLine("Unhandled message type.");
@@ -141,6 +142,15 @@ namespace ClientApp
             catch(Exception ex)
             {
                 Console.WriteLine($"Error parsing message: {ex.Message}");   
+            }
+        }
+
+        private void HandleDisconnectedMessage(string jsonMessage)
+        {
+            Messages.Disconnect? response = Messages.StringToJSON<Messages.Disconnect>(jsonMessage);
+            if (response != null && response.type == messageType.DISCONNECTED)
+            {
+                Console.WriteLine($"{response.username} se ha desconectado");
             }
         }
 
@@ -157,9 +167,14 @@ namespace ClientApp
                 }
                 else if (response.result == "USER_ALREADY_EXISTS")
                 {
-                    Console.WriteLine($"Error: El nombre de usuario {response.extra} ya está en uso.");
+                    Console.WriteLine($"Error: El nombre de usuario {response.extra} ya está en uso. Ingrese otro nombre.");
                     isIdentified = false;
                 }
+            }
+            else if(response!.operation == messageType.INVALID && response.result == "NOT_IDENTIFIED")
+            {
+                Console.WriteLine($"Error: El nombre de usuario {response.extra} es muy largo. Ingrese un nombre de 8 caracteres.");
+                isIdentified = false;
             }
             else
             {
@@ -174,11 +189,10 @@ namespace ClientApp
             {
                 Console.WriteLine($"{response.username} se ha unido al chat");
             }
-
         }
 
         public async Task Disconnect(){
-            Messages.Disconnect desconexion= new Messages.Disconnect(messageType.DISCONNECTED,userName!);
+            Messages.Disconnect desconexion= new Messages.Disconnect(messageType.DISCONNECT);
             string json = mensajes.JSONToString(desconexion);
             await Send(json);
         } 
