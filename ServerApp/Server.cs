@@ -83,7 +83,7 @@ namespace ServerApp
                             await HandleIdentifyRequest(jsonMessage,client);
                             break;
                         case messageType.STATUS:
-                            
+                            await HandleStatusRequest(jsonMessage,client);
                             break;
                         case messageType.USERS:
                             
@@ -124,6 +124,15 @@ namespace ServerApp
                 }
         }
 
+        private async Task HandleStatusRequest(string jsonMessage, Socket client)
+        {
+            Messages.Status? toRecognize = Messages.StringToJSON<Messages.Status>(jsonMessage);
+            string status = toRecognize.status!;
+            
+            
+            
+        }
+
         private async Task HandleIdentifyRequest(string jsonMessage,Socket client)
         {
             bool isIdentified = false;
@@ -132,7 +141,7 @@ namespace ServerApp
             if (!isIdentified && toRecognize != null)
             {
                 isIdentified = await HandleClientIdentification(client, toRecognize);
-                username = toRecognize?.username;
+                username = toRecognize.username;
             }
             else if (isIdentified)
             {
@@ -170,6 +179,7 @@ namespace ServerApp
                     Messages.Identify response = new Messages.Identify(messageType.RESPONSE, messageType.IDENTIFY, "SUCCESS", username!);
                     await SendMessageToClient(client, response);
                     await BroadcastNewUser(username!);
+
                     return true;
                 }else if(username.Length >= 8){
                     await SendInvalidResponse(client);
@@ -253,7 +263,7 @@ namespace ServerApp
             }
         }
 
-         private async Task BroadcastUserLeft(string username)
+        private async Task BroadcastUserLeft(string username)
         {
             foreach (var client in clientesConectados)
             {
@@ -272,7 +282,7 @@ namespace ServerApp
                 }
             }
         }
-
+        
 
     }
 }

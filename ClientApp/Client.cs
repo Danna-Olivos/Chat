@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
 using General;
+using System.Runtime.CompilerServices;
 
 namespace ClientApp
 {
@@ -36,15 +37,28 @@ namespace ClientApp
             try
             {
                 await s_Client.ConnectAsync(endPoint);
-                Console.WriteLine("Te conectaste al servidor");
 
                 _ = Task.Run(() => Receive()); 
                 await NameUser();
+                status = "ACTIVE";
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error de conexión: {ex.Message}");
             }
+        }
+
+        public async Task Connect()
+        {
+            String? msg;
+            await Task.Run(()=>
+            {
+                while(true){
+                    Console.WriteLine($"{userName}: ");
+                    msg = Console.ReadLine();
+                    RecognizeCommand(msg!);
+                }
+            });
         }
 
         public async Task NameUser()
@@ -65,7 +79,6 @@ namespace ClientApp
             {
                 byte[] byteMsg = Encoding.UTF8.GetBytes(msg);
                 await s_Client.SendAsync(byteMsg);
-                //Console.WriteLine("Mensaje enviado: " + msg);
             }
             catch(SocketException ex)
             {
@@ -162,7 +175,7 @@ namespace ClientApp
             {
                 if (response.result == "SUCCESS")
                 {
-                    Console.WriteLine($"Identificación exitosa. Bienvenido {response.extra}");
+                    Console.WriteLine($"Identificación exitosa. Bienvenido {response.extra}.Presione enter para comenzar");
                     isIdentified = true;
                 }
                 else if (response.result == "USER_ALREADY_EXISTS")
@@ -187,7 +200,7 @@ namespace ClientApp
             Messages.Identify? response = Messages.StringToJSON<Messages.Identify>(jsonMessage);
             if (response.type == messageType.NEW_USER)
             {
-                Console.WriteLine($"{response.username} se ha unido al chat");
+                Console.WriteLine($"{response.username} se unio al chat");
             }
         }
 
@@ -197,40 +210,47 @@ namespace ClientApp
             await Send(json);
         } 
 
+        public async Task Status(string estado){
+            Messages.Status estatus = new Messages.Status(messageType.STATUS,estado);
+            string json = mensajes.JSONToString(estatus);
+            await Send(json);
+        }
+
         public async void RecognizeCommand(string msg){
-            switch(msg) //agregar el identify?
+            var (command, input)= ParseCommand(msg);
+            switch(command) 
             {
-                case "*exit":
+                case "*exit*":
                     await Disconnect();
                     break;
-                case "*leaveRoom":
+                case "*leaveRoom*":
                     break;
-                case "*sendToRoom":
+                case "*sendToRoom*":
                    
                     break;
-                case "*listOfRoomUsers":
+                case "*listOfRoomUsers*":
                     
                     break;
-                case "*joinRoom":
+                case "*joinRoom*":
                     
                     break;
-                case "*inviteToRoom":
+                case "*inviteToRoom*":
                     
                     break;
-                case "*makeRoom":
+                case "*makeRoom*":
                    
                     break;
-                case "*sendMessage":
+                case "*sendMessage*":
                     
                     break;
-                case "*sendPrivateMessage":
+                case "*sendPrivateMessage*":
                     
                     break;
-                case "*users":
+                case "*users*":
                     
                     break;
-                case "*status":
-                    
+                case "*status*":
+                    await Status(input);
                     break;
 
                 default:
@@ -238,6 +258,24 @@ namespace ClientApp
                     break;
             }
         }
+
+        private (string command, string parameter) ParseCommand(string userInput)
+        {
+            userInput = userInput.Trim();
+
+            int spaceIndex = userInput.IndexOf(' ');
+
+            if (spaceIndex == -1)
+            {
+                return (userInput, string.Empty);
+            }
+
+            string command = userInput.Substring(0, spaceIndex).Trim();
+            string parameter = userInput.Substring(spaceIndex + 1).Trim();
+
+            return (command, parameter);
+        }
+
     }
     
 }

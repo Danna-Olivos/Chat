@@ -23,13 +23,9 @@ namespace ClientApp
             }
 
             Client c = new Client(ip!,port);
-            String? msg;
+           
             await c.Start();
-            while(true){
-                Console.WriteLine("Escriba: ");//hacer que aca apareza el nombre de usuario
-                msg = Console.ReadLine();
-                c.RecognizeCommand(msg!);
-            }
+            await c.Connect();
         }
     }
 }
