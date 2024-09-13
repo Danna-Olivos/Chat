@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace General
 {
@@ -39,7 +40,7 @@ namespace General
         //serializar
         public string JSONToString<T>(T obj) where T : class
         {
-            var options = new JsonSerializerOptions{WriteIndented = true};
+            var options = new JsonSerializerOptions{WriteIndented = true,DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull};
             string jsonString = JsonSerializer.Serialize(obj,options);
             return jsonString; 
         }
@@ -73,6 +74,28 @@ namespace General
                 
             }
         }
+
+        public partial class Disconnect
+        {
+            public messageType type{get;set;}
+            public string? username{get;set;}
+            public string? roomname{get;set;}
+
+            public Disconnect(messageType type, string roomname, string username){
+                this.type = type;
+                this.roomname = roomname;
+                this.username = username;
+            }
+
+            public Disconnect(messageType type,string username){
+                this.type = type;
+                this.username = username;
+            }
+             public Disconnect(messageType type){
+                this.type = type;
+            }
+
+        }
         
         public partial class Invalid
         {
@@ -86,6 +109,29 @@ namespace General
                 this.operation = operation;
                 this.result = result;
             }
+        }
+
+        public partial class Status
+        {
+            public messageType? type{get;set;}
+            public string? status{get;set;}
+            public string? username{get;set;}
+
+            public Status(){}
+
+            public Status(messageType type, string status)
+            {
+                this.type = type;
+                this.status = status;
+            }
+
+            public Status(messageType type, string username, string status)
+            {
+                this.type = type;
+                this.status = status;
+                this.username = username;
+            }
+
         }
 
         //las demas 

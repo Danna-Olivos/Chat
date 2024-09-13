@@ -28,11 +28,12 @@ namespace ClientApp
             while(true){
                 Console.WriteLine("Escriba: ");
                 msg = Console.ReadLine();
-                _ = c.Send(msg!);
-                if(msg == "exit"){
-                    c.Disconnect();
-                    break; 
-                }
+                // _ = c.Send(msg!);
+                // if(msg == "exit"){
+                //     c.Disconnect();
+                //     break; 
+                // }
+                c.RecognizeCommand(msg!);
             }
         }
     }

@@ -54,7 +54,7 @@ namespace ClientApp
             await IdentifyInServer();
         }
 
-        public async Task IdentifyInServer()
+        public async Task IdentifyInServer()//switch para enviar?
         {
             Messages.Identify identificador = new Messages.Identify(messageType.IDENTIFY,userName!);
             string json = mensajes.JSONToString(identificador);
@@ -96,13 +96,43 @@ namespace ClientApp
             }
         }
 
-        private void HandleMessage(string jsonMessage)
+        private void HandleMessage(string jsonMessage)//switch for all messages
+        {
+            try
+            {
+                var toRecognize = JsonSerializer.Deserialize<Messages.Identify>(jsonMessage);
+                if(toRecognize?.type == null)
+                {
+                    Console.WriteLine("Unknown or invalid message received.");
+                    return;    
+                }
+
+                switch(toRecognize.type)
+                {
+                    case messageType.IDENTIFY:
+                        HandleIdentifyMessage(jsonMessage);
+                        break;
+                    case messageType.NEW_USER:
+                        HandleNewUserMessage(jsonMessage);
+                        break;
+                    default:
+                        Console.WriteLine("Unhandled message type.");
+                        break;
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Error parsing message: {ex.Message}");   
+            }
+        }
+
+        private void HandleIdentifyMessage(string jsonMessage)
         {
             Messages.Identify? response = Messages.StringToJSON<Messages.Identify>(jsonMessage);
 
-            if (response != null && response.type == messageType.RESPONSE && response.operation == messageType.IDENTIFY)
+            if (response.type == messageType.RESPONSE && response.operation == messageType.IDENTIFY)
             {
-                if (response.result == "SUCCES")
+                if (response.result == "SUCCESS")
                 {
                     Console.WriteLine($"Identificación exitosa. Bienvenido {response.extra}");
                     isIdentified = true;
@@ -119,24 +149,33 @@ namespace ClientApp
             }
         }
 
-        public void Disconnect(){
+        private void HandleNewUserMessage(string jsonMessage)
+        {
+            Messages.Identify? response = Messages.StringToJSON<Messages.Identify>(jsonMessage);
+            if (response.type == messageType.NEW_USER)
+            {
+                Console.WriteLine($"{response.username} se ha unido al chat");
+            }
 
-             try
+        }
+
+        public async Task Disconnect(){
+            Messages.Disconnect desconexion= new Messages.Disconnect(messageType.DISCONNECTED,userName!);
+            string json = mensajes.JSONToString(desconexion);
+            await Send(json);
+        } 
+
+        public async void RecognizeCommand(string msg){
+            switch(msg)
             {
-                s_Client.Shutdown(SocketShutdown.Both);
-                s_Client.Close();
-            
-                Console.WriteLine("Te haz desconectado.");
+                case "*exit":
+                    await Disconnect();
+                    break;
+
+                default:
+                    break;
             }
-            catch (SocketException se)
-            {
-                Console.WriteLine($"Socket error during disconnection: {se.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during disconnection: {ex.Message}");
-            }
-        }   
+        }
     }
     
 }

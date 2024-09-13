@@ -16,7 +16,6 @@ namespace ServerApp
         private IPEndPoint endPoint;
 
         private Socket s_Server;
-        //private Socket? s_Client;
         static ConcurrentDictionary<string, Socket> clientesConectados = new ConcurrentDictionary<string, Socket>();
         private Messages mensajes = new Messages();
 
@@ -136,6 +135,25 @@ namespace ServerApp
             return false;
         }
 
+         public async Task Disconnect(Socket client){
+            try
+            {
+                client.Shutdown(SocketShutdown.Both);
+                client.Close();
+                // Messages.Disconnect response = new Messages.Disconnect(messageType.DISCONNECTED, username!);
+                // await SendMessageToClient(client, response);
+                // clientesConectados.TryRemove(client.Key, out _);
+            }
+            catch (SocketException se)
+            {
+                Console.WriteLine($"Socket error during disconnection: {se.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during disconnection: {ex.Message}");
+            }
+        } 
+
         private void HandleClientMessage(string jsonMessage, string? username)
         {
             if (!string.IsNullOrEmpty(username))
@@ -159,7 +177,7 @@ namespace ServerApp
 
         private async void BroadcastNewUser(string username)
         {
-            foreach (var client in clientesConectados)
+            foreach (var client in clientesConectados)//para que se envie el mensaje a cada cliente conectado
             {
                 try
                 {
@@ -177,19 +195,5 @@ namespace ServerApp
             }
         }
 
-        public String byteToString(byte[]buffer){
-            String msg;
-            int cadenaIndex;
-            msg = Encoding.UTF8.GetString(buffer); 
-            cadenaIndex = msg.IndexOf('\0');
-            if(cadenaIndex > 0){
-                msg = msg.Substring(0,cadenaIndex);
-            }
-            return msg; 
-            
-        }
-        //ocupar lock para cuando el server le responda al cliente 
-        //guardar estados de los usuarios identifiacados
-        //guardar salas creadas 
     }
 }
