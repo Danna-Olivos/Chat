@@ -36,6 +36,13 @@ namespace General
         }
     public class Messages
     {
+         public messageType? type{get;set;}
+        public string? username{get;set;}
+        public messageType? operation{get;set;}
+        public string? result{get;set;}
+        public string? extra{get;set;}
+        public string? text{get;set;}
+        
         public Messages(){}
         //serializar
         public string JSONToString<T>(T obj) where T : class

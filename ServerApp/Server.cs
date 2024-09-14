@@ -133,7 +133,7 @@ namespace ServerApp
             Messages.Text? toRecognize = Messages.StringToJSON<Messages.Text>(jsonMessage);
             string userToSendTo = toRecognize.username!;
             string username = GetUsernameBySocket(client)!;
-            await BroadcastMessageToClient(userToSendTo,username, toRecognize.text!);
+            await BroadcastMessageToClient(userToSendTo,username, toRecognize.text!,client);
         }
         private async Task HandlePublicText(string jsonMessage, Socket client)
         {
@@ -332,13 +332,12 @@ namespace ServerApp
             }
         }
 
-        private async Task BroadcastMessageToClient(string usernameToSendTo,string username, string msg)
+        private async Task BroadcastMessageToClient(string usernameToSendTo,string username, string msg, Socket c)
         {
-            string clientToFind = usernameToSendTo;
             Socket value;
             foreach (var client in clientesConectados)
             {
-                if(client.Key == clientToFind)
+                if(client.Key == usernameToSendTo)
                 {
                     value = client.Value;
                     try
@@ -354,6 +353,13 @@ namespace ServerApp
                         Console.WriteLine($"Error broadcasting to client:{ex.Message}");
                         clientesConectados.TryRemove(client.Key, out _);
                     }
+                }
+                else if(client.Key != usernameToSendTo)
+                {
+                    Messages.Text response = new Messages.Text(messageType.RESPONSE, messageType.TEXT, "NO_SUCH_USER",usernameToSendTo);
+                    await SendMessageToClient(c,response);
+                    break;
+                    
                 }
                 
             }

@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Text.Json;
 using General;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ClientApp
 {
@@ -202,9 +203,9 @@ namespace ClientApp
             }
         }
 
-        private async void HandleResponseMessage(string jsonMessage)
+        private async void HandleResponseMessage(string jsonMessage)//agregar response de private message
         {
-            Messages.Identify? response = Messages.StringToJSON<Messages.Identify>(jsonMessage);
+            Messages response = Messages.StringToJSON<Messages>(jsonMessage);
 
             if (response != null && response.type == messageType.RESPONSE && response.operation == messageType.IDENTIFY)
             {
@@ -227,6 +228,10 @@ namespace ClientApp
                 userName = null;
                 isIdentified = false;
                 await NameUser();
+            }
+            else if(response.operation == messageType.TEXT && response.result == "NO_SUCH_USER")
+            {
+                Console.WriteLine($"El usuario {response.extra} no existe");
             }
             else
             {
@@ -310,23 +315,6 @@ namespace ClientApp
                     break;
             }
         }
-
-        // private (string command, string parameter) ParseCommand(string userInput)
-        // {
-        //     userInput = userInput.Trim();
-
-        //     int spaceIndex = userInput.IndexOf(' ');
-
-        //     if (spaceIndex == -1)
-        //     {
-        //         return (userInput, string.Empty);
-        //     }
-
-        //     string command = userInput.Substring(0, spaceIndex).Trim();
-        //     string parameter = userInput.Substring(spaceIndex + 1).Trim();
-
-        //     return (command, parameter);
-        // }
 
         private (string command, string parameter1, string parameter2) ParseCommand(string userInput)
         {
