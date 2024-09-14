@@ -316,10 +316,33 @@ namespace ClientApp
                     break;
 
                 default:
-                //haz ingresado mal el comando, imprimirle en pantalla la lista de comandos 
+                    Console.WriteLine("Comando no reconocido. Los comandos válidos son:");
+                    foreach (string comm in GetCommandList())
+                    {
+                        Console.WriteLine(comm);
+                    }
                     break;
             }
         }
+
+        public List<string> GetCommandList()
+        {
+            return new List<string>
+            {
+            "*exit*",
+            "*leaveRoom* nombreSala",
+            "*sendMessageToRoom* tuMensaje",
+            "*listOfRoomUsers*",
+            "*joinRoom* nombreSala",
+            "*inviteToRoom* listaDeUsuarios/ nombreSala",
+            "*makeRoom* nombreDeTuSala",
+            "*sendMessage* tuMensaje",
+            "*sendPrivateMessage* unUsuario/ tuMensaje",
+            "*users*",
+            "*status* tuEstadoDeConexion (AWAY/BUSY/ACTIVE)"
+            };
+        }
+
 
         private (string command, string parameter1, string parameter2) ParseCommand(string userInput)
         {

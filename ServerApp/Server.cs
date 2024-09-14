@@ -90,6 +90,7 @@ namespace ServerApp
                             await HandleStatusRequest(jsonMessage,client);
                             break;
                         case messageType.USERS:
+                            await HandleUserListRequest(jsonMessage,client);
                             break;
                         case messageType.TEXT:
                             await HandlePrivateText(jsonMessage,client);
@@ -125,6 +126,11 @@ namespace ServerApp
                 {
                     Console.WriteLine($"Error parsing message: {ex.Message}");
                 }
+        }
+
+        private async Task HandleUserListRequest(string jsonMessage, Socket client)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task HandlePrivateText(string jsonMessage, Socket client)
