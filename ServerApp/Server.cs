@@ -90,7 +90,6 @@ namespace ServerApp
                             await HandleStatusRequest(jsonMessage,client);
                             break;
                         case messageType.USERS:
-                            
                             break;
                         case messageType.TEXT:
                             await HandlePrivateText(jsonMessage,client);

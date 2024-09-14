@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -42,7 +43,7 @@ namespace General
         public string? result{get;set;}
         public string? extra{get;set;}
         public string? text{get;set;}
-        
+
         public Messages(){}
         //serializar
         public string JSONToString<T>(T obj) where T : class
@@ -118,6 +119,26 @@ namespace General
                 this.operation = operation;
                 this.result = result;
             }
+        }
+
+        public partial class Users
+        {
+            public messageType? type{get;set;}
+            public ConcurrentDictionary<string,string> clientesConectados {get;set;}
+
+            public Users(){}
+
+            public Users(messageType type)
+            {
+                this.type = type;
+            }
+
+            public Users(messageType type,ConcurrentDictionary<string,string> clientesConectados)
+            {
+                this.type = type;
+                this.clientesConectados = clientesConectados;
+            }
+            
         }
 
         public partial class Status

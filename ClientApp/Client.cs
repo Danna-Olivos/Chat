@@ -100,7 +100,6 @@ namespace ClientApp
                     if (receivedBytes > 0)
                     {
                         string jsonMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                        Console.WriteLine($"Received message from server: {jsonMessage}"); 
                         HandleMessage(jsonMessage);
                         
                     }
@@ -273,6 +272,12 @@ namespace ClientApp
             await Send(json);
         }
 
+        public async Task UsersList(){
+            Messages.Users usuarios = new Messages.Users(messageType.USERS);
+            string json = mensajes.JSONToString(usuarios);
+            await Send(json);
+        }
+
         public async Task RecognizeCommand(string msg){
             var (command, input,input2)= ParseCommand(msg);
             switch(command) 
@@ -304,7 +309,7 @@ namespace ClientApp
                     await PrivateText(input,input2);
                     break;
                 case "*users*":
-                    
+                    await UsersList();
                     break;
                 case "*status*":
                     await Status(input);
@@ -319,25 +324,25 @@ namespace ClientApp
         private (string command, string parameter1, string parameter2) ParseCommand(string userInput)
         {
             userInput = userInput.Trim();
-            int firstSpaceIndex = userInput.IndexOf(' ');
+            int firstSpace = userInput.IndexOf(' ');
 
-            if (firstSpaceIndex == -1)
+            if (firstSpace == -1)
             {
                 return (userInput, string.Empty, string.Empty); 
             }
 
-            string command = userInput.Substring(0, firstSpaceIndex).Trim();
-            string remaining = userInput.Substring(firstSpaceIndex + 1).Trim();
+            string command = userInput.Substring(0, firstSpace).Trim();
+            string remaining = userInput.Substring(firstSpace + 1).Trim();
 
-            int secondSpaceIndex = remaining.IndexOf("/");
+            int secondSpace = remaining.IndexOf("/");
 
-            if (secondSpaceIndex == -1)
+            if (secondSpace == -1)
             {
                 return (command, remaining, string.Empty);
             }
 
-            string parameter1 = remaining.Substring(0, secondSpaceIndex).Trim();
-            string parameter2 = remaining.Substring(secondSpaceIndex + 1).Trim();
+            string parameter1 = remaining.Substring(0, secondSpace).Trim();
+            string parameter2 = remaining.Substring(secondSpace + 1).Trim();
 
             return (command, parameter1, parameter2);
         }
