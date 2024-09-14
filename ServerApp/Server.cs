@@ -52,15 +52,18 @@ namespace ServerApp
             while (true)
             {
                 byte[] buffer = new byte[1024];
+                string username = GetUsernameBySocket(client)!;
 
                 int receivedBytes = await ReceiveDataAsync(client, buffer);
                 if (receivedBytes == 0)
                 {
                     Console.WriteLine("Cliente desconectado");
+                    await BroadcastMessage(username, messageType.DISCONNECT);
                     break;
                 }
 
                 string jsonMessage = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+                Console.WriteLine($"Received request from client: {jsonMessage}"); 
                 HandleRequest(jsonMessage,client);
                 
             }
@@ -90,7 +93,7 @@ namespace ServerApp
                             
                             break;
                         case messageType.TEXT:
-                            
+                            await HandlePrivateText(jsonMessage,client);
                             break;
                         case messageType.PUBLIC_TEXT:
                             await HandlePublicText(jsonMessage,client);
@@ -125,12 +128,17 @@ namespace ServerApp
                 }
         }
 
+        private async Task HandlePrivateText(string jsonMessage, Socket client)
+        {
+            Messages.Text? toRecognize = Messages.StringToJSON<Messages.Text>(jsonMessage);
+            string userToSendTo = toRecognize.username!;
+            string username = GetUsernameBySocket(client)!;
+            await BroadcastMessageToClient(userToSendTo,username, toRecognize.text!);
+        }
         private async Task HandlePublicText(string jsonMessage, Socket client)
         {
             Messages.Text? toRecognize = Messages.StringToJSON<Messages.Text>(jsonMessage);
             string username = GetUsernameBySocket(client)!;
-            Messages.Text response = new Messages.Text(messageType.PUBLIC_TEXT_FROM, username,toRecognize.text!);
-            await SendMessageToClient(client,response);
             await BroadcastMessageToChat(username, toRecognize.text!);
         }
 
@@ -231,13 +239,13 @@ namespace ServerApp
 
         public async Task HandelDisconnectRequest(string jsonMessage,Socket client){
             Messages.Disconnect? toRecognize = Messages.StringToJSON<Messages.Disconnect>(jsonMessage);
-            string username = toRecognize.username!;
+            string username = GetUsernameBySocket(client)!;
+            await BroadcastMessage(username, messageType.DISCONNECT);
             if(toRecognize.type == messageType.DISCONNECT)
             {
                 try
                 {
-                    await BroadcastMessage(username, messageType.DISCONNECT);
-
+        
                     clientesConectados.TryRemove(username!,out client!);
                     client.Shutdown(SocketShutdown.Both);
                     client.Close();
@@ -304,16 +312,16 @@ namespace ServerApp
             }
         }
 
-         private async Task BroadcastMessageToChat(string username,string text)
+        private async Task BroadcastMessageToChat(string username,string text)
         {
-            foreach (var client in clientesConectados)//para que se envie el mensaje a cada cliente conectado
+            foreach (var client in clientesConectados)
             {
                 try
                 {
                     if (client.Key != username)
                     {
-                        Messages.Text newUserMessage = new Messages.Text(messageType.PUBLIC_TEXT_FROM, username,text);
-                        await SendMessageToClient(client.Value, newUserMessage);
+                        Messages.Text message = new Messages.Text(messageType.PUBLIC_TEXT_FROM, username,text);
+                        await SendMessageToClient(client.Value, message);
                     }
                 }
                 catch(Exception ex)
@@ -321,6 +329,33 @@ namespace ServerApp
                     Console.WriteLine($"Error broadcasting to client:{ex.Message}");
                     clientesConectados.TryRemove(client.Key, out _);
                 }
+            }
+        }
+
+        private async Task BroadcastMessageToClient(string usernameToSendTo,string username, string msg)
+        {
+            string clientToFind = usernameToSendTo;
+            Socket value;
+            foreach (var client in clientesConectados)
+            {
+                if(client.Key == clientToFind)
+                {
+                    value = client.Value;
+                    try
+                    {
+                        if (client.Key != username)
+                        {
+                            Messages.Text messagePriv = new Messages.Text(messageType.TEXT_FROM, username, msg);
+                            await SendMessageToClient(value, messagePriv);
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine($"Error broadcasting to client:{ex.Message}");
+                        clientesConectados.TryRemove(client.Key, out _);
+                    }
+                }
+                
             }
         }
 

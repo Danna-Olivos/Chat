@@ -39,6 +39,9 @@ namespace ClientApp
                 await s_Client.ConnectAsync(endPoint);
 
                 _ = Task.Run(() => Receive()); 
+                if(!isIdentified){
+                    _ = Task.Run(()=> Connect());
+                }
                 await NameUser();
                 status = "ACTIVE";
             }
@@ -51,14 +54,13 @@ namespace ClientApp
         public async Task Connect()
         {
             String? msg;
-            await Task.Run(()=>
-            {
-                while(true){
-                    Console.WriteLine($"{userName}: ");
-                    msg = Console.ReadLine();
-                    RecognizeCommand(msg!);
-                }
-            });
+
+            while(true){
+                Console.WriteLine($"{userName}: ");
+                msg = Console.ReadLine();
+                await RecognizeCommand(msg!);
+            }
+
         }
 
         public async Task NameUser()
@@ -134,6 +136,7 @@ namespace ClientApp
                     case messageType.USER_LIST:
                         break;
                     case messageType.TEXT_FROM:
+                        HandlePrivateText(jsonMessage);
                         break;
                     case messageType.PUBLIC_TEXT_FROM:
                         HandlePublicText(jsonMessage);
@@ -160,13 +163,23 @@ namespace ClientApp
             }
         }
 
+        private void HandlePrivateText(string jsonMessage)
+        {
+            Messages.Text? response = Messages.StringToJSON<Messages.Text>(jsonMessage);
+            string text = response.text!;
+            if (status != null && response.type == messageType.TEXT_FROM)
+            {
+                Console.WriteLine($"Mensaje privado de {response.username}: {text}");
+            }
+        }
+
         private void HandlePublicText(string jsonMessage)
         {
             Messages.Text? response = Messages.StringToJSON<Messages.Text>(jsonMessage);
             string text = response.text!;
             if (status != null && response.type == messageType.PUBLIC_TEXT_FROM)
             {
-                Console.WriteLine($"{response.username} : {text}");
+                Console.WriteLine($"{response.username}: {text}");
             }
         }
 
@@ -189,7 +202,7 @@ namespace ClientApp
             }
         }
 
-        private void HandleResponseMessage(string jsonMessage)
+        private async void HandleResponseMessage(string jsonMessage)
         {
             Messages.Identify? response = Messages.StringToJSON<Messages.Identify>(jsonMessage);
 
@@ -203,13 +216,17 @@ namespace ClientApp
                 else if (response.result == "USER_ALREADY_EXISTS")
                 {
                     Console.WriteLine($"Error: El nombre de usuario {response.extra} ya está en uso. Ingrese otro nombre.");
+                    userName = null;
                     isIdentified = false;
+                    await NameUser();
                 }
             }
             else if(response!.operation == messageType.INVALID && response.result == "NOT_IDENTIFIED")
             {
                 Console.WriteLine($"Error: El nombre de usuario {response.extra} es muy largo. Ingrese un nombre de 8 caracteres.");
+                userName = null;
                 isIdentified = false;
+                await NameUser();
             }
             else
             {
@@ -244,8 +261,15 @@ namespace ClientApp
             await Send(json);
         }
 
-        public async void RecognizeCommand(string msg){
-            var (command, input)= ParseCommand(msg);
+        public async Task PrivateText(string username,string msg)
+        {
+            Messages.Text mensajePriv = new Messages.Text(messageType.TEXT,username,msg);
+            string json = mensajes.JSONToString(mensajePriv);
+            await Send(json);
+        }
+
+        public async Task RecognizeCommand(string msg){
+            var (command, input,input2)= ParseCommand(msg);
             switch(command) 
             {
                 case "*exit*":
@@ -272,7 +296,7 @@ namespace ClientApp
                     await PublicText(input);
                     break;
                 case "*sendPrivateMessage*":
-                    
+                    await PrivateText(input,input2);
                     break;
                 case "*users*":
                     
@@ -287,22 +311,49 @@ namespace ClientApp
             }
         }
 
-        private (string command, string parameter) ParseCommand(string userInput)
+        // private (string command, string parameter) ParseCommand(string userInput)
+        // {
+        //     userInput = userInput.Trim();
+
+        //     int spaceIndex = userInput.IndexOf(' ');
+
+        //     if (spaceIndex == -1)
+        //     {
+        //         return (userInput, string.Empty);
+        //     }
+
+        //     string command = userInput.Substring(0, spaceIndex).Trim();
+        //     string parameter = userInput.Substring(spaceIndex + 1).Trim();
+
+        //     return (command, parameter);
+        // }
+
+        private (string command, string parameter1, string parameter2) ParseCommand(string userInput)
         {
             userInput = userInput.Trim();
+            int firstSpaceIndex = userInput.IndexOf(' ');
 
-            int spaceIndex = userInput.IndexOf(' ');
-
-            if (spaceIndex == -1)
+            if (firstSpaceIndex == -1)
             {
-                return (userInput, string.Empty);
+                return (userInput, string.Empty, string.Empty); 
             }
 
-            string command = userInput.Substring(0, spaceIndex).Trim();
-            string parameter = userInput.Substring(spaceIndex + 1).Trim();
+            string command = userInput.Substring(0, firstSpaceIndex).Trim();
+            string remaining = userInput.Substring(firstSpaceIndex + 1).Trim();
 
-            return (command, parameter);
+            int secondSpaceIndex = remaining.IndexOf("/");
+
+            if (secondSpaceIndex == -1)
+            {
+                return (command, remaining, string.Empty);
+            }
+
+            string parameter1 = remaining.Substring(0, secondSpaceIndex).Trim();
+            string parameter2 = remaining.Substring(secondSpaceIndex + 1).Trim();
+
+            return (command, parameter1, parameter2);
         }
+
 
     }
     
